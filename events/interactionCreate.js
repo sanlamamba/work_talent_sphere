@@ -21,6 +21,21 @@ module.exports = {
             );
           }
         }
+        // if the customId starts with submitJob_ then
+        if (interaction.customId.startsWith("submitJob_")) {
+          const buttonFile = path.join(
+            __dirname,
+            "../interactions/buttons/submitJobButton.js"
+          );
+          if (fs.existsSync(buttonFile)) {
+            const buttonHandler = require(buttonFile);
+            await buttonHandler.execute(
+              interaction,
+              interaction.customId.split("_")[1]
+            );
+          }
+        }
+
         const buttonFile = path.join(
           __dirname,
           "../interactions/buttons",
@@ -50,6 +65,20 @@ module.exports = {
       }
 
       if (interaction.isModalSubmit()) {
+        // if custom Id start with jobSubmissionModal then
+        if (interaction.customId.startsWith("jobSubmissionModal_")) {
+          const modalFile = path.join(
+            __dirname,
+            "../interactions/modals/jobSubmissionModal.js"
+          );
+          if (fs.existsSync(modalFile)) {
+            const modalHandler = require(modalFile);
+            await modalHandler.handleModalSubmit(
+              interaction,
+              interaction.customId.split("_")[1]
+            );
+          }
+        }
         console.log("Handling modal submit for", interaction.customId);
         const modalFile = path.join(
           __dirname,

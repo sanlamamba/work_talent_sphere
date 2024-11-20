@@ -4,21 +4,21 @@ const {
   ActionRowBuilder,
   TextInputStyle,
   EmbedBuilder,
+  ChannelType,
 } = require("discord.js");
 
 module.exports = {
   customId: "jobSubmissionModal",
 
+  /**
+   * Creates a modal for job submission based on the job type.
+   * @param {string} jobType - The type of job (e.g., design, development, marketing).
+   * @returns {ModalBuilder} The constructed modal.
+   */
   createModal(jobType) {
     const modal = new ModalBuilder()
-      .setCustomId(this.customId)
-      .setTitle("Submit a Job");
-    const jobTypeField = new TextInputBuilder()
-      .setCustomId("jobTypeField")
-      .setLabel("Job Type")
-      .setStyle(TextInputStyle.Short)
-      .setRequired(true)
-      .setValue(jobType);
+      .setCustomId(`${this.customId}_${jobType}`)
+      .setTitle(`Submit a ${jobType} Job`);
 
     const titleInput = new TextInputBuilder()
       .setCustomId("title")
@@ -46,7 +46,6 @@ module.exports = {
 
     modal.addComponents(
       new ActionRowBuilder().addComponents(titleInput),
-      new ActionRowBuilder().addComponents(jobTypeField),
       new ActionRowBuilder().addComponents(priceInput),
       new ActionRowBuilder().addComponents(locationInput),
       new ActionRowBuilder().addComponents(descriptionInput)
@@ -55,47 +54,96 @@ module.exports = {
     return modal;
   },
 
-  async handleModalSubmit(interaction) {
-    const title = interaction.fields.getTextInputValue("title");
-    const price = interaction.fields.getTextInputValue("price");
-    const location = interaction.fields.getTextInputValue("location");
-    const description = interaction.fields.getTextInputValue("description");
-    const jobType = interaction.fields.getTextInputValue("jobTypeField");
+  /**
+   * Handles modal submission and creates a forum post for the job.
+   * @param {Interaction} interaction - The interaction object from the Discord API.
+   * @param {string} jobType - The type of job (e.g., design, development, marketing).
+   */
+  async handleModalSubmit(interaction, jobType) {
+    const rolesToTag = {
+      design: ["1302736172602363938", "1302736177866211368"],
+      development: ["1302736172602363938", "1302736183545299024"],
+      marketing: ["1302736172602363938", "1302736188863680542"],
+      nsfw: ["1302736172602363938"],
+    };
 
-    const experienceLevel =
-      interaction.client.selectedExperience || "Not specified";
+    try {
+      const title = interaction.fields.getTextInputValue("title");
+      const price = interaction.fields.getTextInputValue("price");
+      const location = interaction.fields.getTextInputValue("location");
+      const description = interaction.fields.getTextInputValue("description");
 
-    // delete interaction.client.selectedExperience;
-    delete interaction.client.selectedJobType;
+      const roleMentions =
+        rolesToTag[jobType]?.map((roleId) => `||<@&${roleId}>||`).join(" ") ||
+        "";
 
-    const jobEmbed = new EmbedBuilder()
-      .setColor("#4caf50")
-      .setTitle(title)
-      .setDescription(description)
-      .addFields(
-        { name: "Compensation", value: price, inline: true },
-        { name: "Location", value: location, inline: true },
-        { name: "Experience Level", value: experienceLevel, inline: true },
-        { name: "Job Type", value: jobType, inline: true }
-      )
-      .setTimestamp()
-      .setFooter({
-        text: `Posted by ${interaction.user.tag}`,
-        iconURL: interaction.user.displayAvatarURL(),
-      });
+      const jobEmbed = new EmbedBuilder()
+        .setColor("#4caf50")
+        .setTitle(title)
+        .setDescription(description)
+        .addFields(
+          { name: "Compensation", value: price, inline: true },
+          { name: "Location", value: location, inline: true },
+          { name: "Job Type", value: jobType, inline: true },
+          {
+            name: "Posted By",
+            value: `||<@${interaction.user.id}>||`, // Author mention in spoilers
+            inline: false,
+          }
+        )
+        .setTimestamp()
+        .setFooter({
+          text: `Posted by ${interaction.user.tag}`,
+          iconURL: interaction.user.displayAvatarURL(),
+        });
 
-    const targetChannel = interaction.guild.channels.cache.find(
-      (channel) => channel.name === "post-a-job"
-    );
-    if (targetChannel) {
-      targetChannel.send({ embeds: [jobEmbed] });
       await interaction.reply({
-        content: "Your job has been posted!",
+        content: "✅ Your job has been posted!",
         ephemeral: true,
       });
-    } else {
+
+      // Get forum channels
+      const jobBoardChannel = interaction.guild.channels.cache.find(
+        (channel) =>
+          channel.type === ChannelType.GuildForum &&
+          channel.name === `${jobType}-job-board`
+      );
+
+      const generalJobBoardChannel = interaction.guild.channels.cache.find(
+        (channel) =>
+          channel.type === ChannelType.GuildForum &&
+          channel.name === "job-board"
+      );
+
+      if (jobBoardChannel) {
+        await jobBoardChannel.threads.create({
+          name: title,
+          message: {
+            embeds: [jobEmbed], // Embed comes first
+            content: `📢 **New Job Has been Posted** \n ${roleMentions}`, // Role mentions come after the embed
+            allowedMentions: { roles: rolesToTag[jobType] },
+          },
+        });
+      } else {
+        console.log(`⚠️ Job board channel for ${jobType} not found.`);
+      }
+
+      if (generalJobBoardChannel) {
+        await generalJobBoardChannel.threads.create({
+          name: `${title}`,
+          message: {
+            embeds: [jobEmbed], // Embed comes first
+            content: `📢 **New ${jobType} Job has been Posted!**\n${roleMentions}`, // Role mentions come after the embed
+            allowedMentions: { roles: rolesToTag[jobType] },
+          },
+        });
+      } else {
+        console.log("⚠️ General job board channel not found.");
+      }
+    } catch (error) {
+      console.error("❌ Error handling job submission modal:", error);
       await interaction.reply({
-        content: "Job postings channel not found.",
+        content: "❌ There was an error posting your job. Please try again.",
         ephemeral: true,
       });
     }
