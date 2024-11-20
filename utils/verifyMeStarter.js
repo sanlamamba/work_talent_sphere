@@ -5,7 +5,6 @@ module.exports = {
   description: "Initialize the verification request system",
   async execute(channel) {
     try {
-      // Create the button
       const actionRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("verifyMe")
