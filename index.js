@@ -37,4 +37,26 @@ fs.readdirSync(eventsPath).forEach((file) => {
   client.on(eventName, (...args) => event.execute(...args, client));
 });
 
-client.login(config.token).then(() => scheduleJobs(client));
+client.login(config.token).then(() => {
+  scheduleJobs(client);
+
+  console.log("Bot is online and running.");
+
+  process.on("SIGINT", async () => {
+    console.log("Shutting down bot...");
+    const shutdownChannelId = "1303638656342560768";
+    const shutdownChannel = client.channels.cache.get(shutdownChannelId);
+
+    if (shutdownChannel) {
+      try {
+        await shutdownChannel.send("Bot is going offline. See you later! 👋");
+      } catch (error) {
+        console.error("Failed to send shutdown message:", error);
+      }
+    }
+
+    client.destroy();
+    console.log("Bot disconnected.");
+    process.exit(0);
+  });
+});
