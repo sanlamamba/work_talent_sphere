@@ -7,7 +7,6 @@ module.exports = {
   async execute(interaction) {
     try {
       if (interaction.isButton()) {
-        // if it starts with closeTicket- then
         if (interaction.customId.startsWith("closeTicket-")) {
           const buttonFile = path.join(
             __dirname,
@@ -21,7 +20,6 @@ module.exports = {
             );
           }
         }
-        // if the customId starts with submitJob_ then
         if (interaction.customId.startsWith("submitJob_")) {
           const buttonFile = path.join(
             __dirname,
@@ -65,7 +63,6 @@ module.exports = {
       }
 
       if (interaction.isModalSubmit()) {
-        // if custom Id start with jobSubmissionModal then
         if (interaction.customId.startsWith("jobSubmissionModal_")) {
           const modalFile = path.join(
             __dirname,

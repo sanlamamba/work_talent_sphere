@@ -4,19 +4,16 @@ module.exports = {
   name: "unrestrict",
   description: "Remove a user's restricted role",
   async execute(message) {
-    // Mentioned user
     const user = message.mentions.users.first();
     if (!user) {
       return message.reply("Please mention the user you want to unrestrict.");
     }
 
-    // Fetch the member from the guild
     const member = message.guild.members.cache.get(user.id);
     if (!member) {
       return message.reply("User is not in the server.");
     }
 
-    // Find the "Restricted" role
     const role = message.guild.roles.cache.find(
       (role) => role.name === "Restricted"
     );
@@ -24,7 +21,6 @@ module.exports = {
       return message.reply("Role not found.");
     }
 
-    // Remove the restricted role
     try {
       await member.roles.remove(role);
     } catch (error) {
@@ -32,7 +28,6 @@ module.exports = {
       return message.reply("Failed to remove the restricted role.");
     }
 
-    // Send confirmation message to the user
     const embed = new EmbedBuilder()
       .setColor("#00ff00")
       .setTitle("Access Restored")

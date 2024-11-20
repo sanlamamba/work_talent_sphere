@@ -87,7 +87,7 @@ module.exports = {
           { name: "Job Type", value: jobType, inline: true },
           {
             name: "Posted By",
-            value: `||<@${interaction.user.id}>||`, // Author mention in spoilers
+            value: `||<@${interaction.user.id}>||`,
             inline: false,
           }
         )
@@ -102,7 +102,6 @@ module.exports = {
         ephemeral: true,
       });
 
-      // Get forum channels
       const jobBoardChannel = interaction.guild.channels.cache.find(
         (channel) =>
           channel.type === ChannelType.GuildForum &&
@@ -119,8 +118,8 @@ module.exports = {
         await jobBoardChannel.threads.create({
           name: title,
           message: {
-            embeds: [jobEmbed], // Embed comes first
-            content: `📢 **New Job Has been Posted** \n ${roleMentions}`, // Role mentions come after the embed
+            embeds: [jobEmbed],
+            content: `📢 **New Job Has been Posted** \n ${roleMentions}`,
             allowedMentions: { roles: rolesToTag[jobType] },
           },
         });
@@ -132,8 +131,8 @@ module.exports = {
         await generalJobBoardChannel.threads.create({
           name: `${title}`,
           message: {
-            embeds: [jobEmbed], // Embed comes first
-            content: `📢 **New ${jobType} Job has been Posted!**\n${roleMentions}`, // Role mentions come after the embed
+            embeds: [jobEmbed],
+            content: `📢 **New ${jobType} Job has been Posted!**\n${roleMentions}`,
             allowedMentions: { roles: rolesToTag[jobType] },
           },
         });

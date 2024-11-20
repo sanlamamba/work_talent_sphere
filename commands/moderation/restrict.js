@@ -33,7 +33,6 @@ module.exports = {
         "User has been restricted, but I could not send them a DM"
       );
     }
-    // send a ephemeral message to the moderator
     const dramaChannel = message.guild.channels.cache.find(
       (channel) => channel.name === "drama"
     );
