@@ -1,0 +1,4 @@
+{
+  "prefix": "!",
+  "commands": ["ping", "scrapeData", "gatherInfo", "sendMessage", "help"]
+}
