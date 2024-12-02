@@ -9,7 +9,7 @@ module.exports = {
    * @param {Client} client - The Discord client instance.
    * @param {string} channelId - ID of the channel to send scraping status updates (optional).
    */
-  async scrapeData(client, channelId) {
+  async scrapeData(client) {
     try {
       const [redditData, fourChanData, weWorkRemotelyData] = await Promise.all([
         redditScraper.execute(),
@@ -18,7 +18,6 @@ module.exports = {
       ]);
 
       const data = [...redditData, ...fourChanData, ...weWorkRemotelyData];
-
       await postScrapedJobsToForums.execute(client, data);
     } catch (error) {
       console.error("❌ Error during scraping:", error);
